@@ -47,7 +47,7 @@ export default function RootLayout({
             // saturation={1}
           />
         </div>
-        <main>{children}</main>
+        <main className="relative z-3">{children}</main>
       </body>
     </html>
   );
