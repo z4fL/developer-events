@@ -39,42 +39,35 @@ const BookingSchema = new Schema<IBooking>(
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
-  }
+  },
 );
 
 /**
  * Pre-save hook to validate that the referenced Event exists
  * Prevents orphaned bookings by ensuring eventId points to a real event
  */
-BookingSchema.pre("save", async function (next) {
+BookingSchema.pre("save", async function () {
   const booking = this as IBooking;
 
   // Only validate eventId if it's new or modified
   if (booking.isModified("eventId")) {
     try {
       // Dynamically import Event model to avoid circular dependency
-      const Event = mongoose.models.Event || (await import("./event.model")).default;
+      const Event =
+        mongoose.models.Event || (await import("./event.model")).default;
 
       // Check if the event exists
       const eventExists = await Event.exists({ _id: booking.eventId });
 
       if (!eventExists) {
-        return next(
-          new Error(`Event with ID ${booking.eventId} does not exist`)
-        );
+        throw new Error(`Event with ID ${booking.eventId} does not exist`);
       }
     } catch (error) {
-      return next(
-        new Error(
-          `Failed to validate event reference: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        )
+      throw new Error(
+        `Failed to validate event reference: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
-
-  next();
 });
 
 /**
