@@ -2,6 +2,7 @@ import BookEvent from "@/components/BookEvent";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
 import { getSimiliarEventsBySlug } from "@/lib/actions/event.actions";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -48,24 +49,30 @@ const EventDetailsPage = async ({
 }: {
   params: Promise<{ slug: string }>;
 }) => {
+  'use cache'
+  cacheLife('hours')
+
+
   const { slug } = await params;
+  let event;
 
   const request = await fetch(`${BASE_URL}/api/events/${slug}`);
+  const response = await request.json();
+  event = response.event;
+
   const {
-    event: {
-      description,
-      image,
-      overview,
-      date,
-      time,
-      location,
-      mode,
-      agenda,
-      audience,
-      tags,
-      organizer,
-    },
-  } = await request.json();
+    description,
+    image,
+    overview,
+    date,
+    time,
+    location,
+    mode,
+    agenda,
+    audience,
+    tags,
+    organizer,
+  } = event;
 
   if (!description) return notFound();
 
@@ -142,11 +149,11 @@ const EventDetailsPage = async ({
               <p className="text-sm">Be the first to book your spot!</p>
             )}
 
-            <BookEvent />
+            <BookEvent eventId={event._id} slug={event.slug} />
           </div>
         </aside>
       </div>
-      <div className="flex gap-4 mt-20" style={{flexDirection: 'column'}}>
+      <div className="flex gap-4 mt-20" style={{ flexDirection: "column" }}>
         <h2>Similiar Events</h2>
         <div className="events">
           {similiarEvents.length > 0 &&
